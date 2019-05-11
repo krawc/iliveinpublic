@@ -5,8 +5,10 @@ class Page extends React.Component {
   constructor(props) {
     super(props);
     this.getHours = this.getHours.bind(this);
+    this.updateInfo = this.updateInfo.bind(this);
     this.state = {
       information: [],
+      infoArray: [],
       personality: {
         "word_count": 0,
         "processed_language": "en",
@@ -413,6 +415,44 @@ class Page extends React.Component {
   }
 
   componentDidMount() {
+
+    let printOut = [];
+    let counter = 0;
+
+    setInterval(() => {
+      if (this.state.infoArray[counter]) {
+        printOut.push(this.state.infoArray[counter]);
+        this.setState({
+          information: printOut
+        })
+        counter++;
+      } else {
+        printOut = [];
+        this.setState({
+          information: []
+        });
+        counter = 0;
+      }
+    }, 5000);
+
+    setInterval(() => {
+    fetch('https://krawc.space/api/collections/get/dataselfie_outputs?token=e2949d4cfc3fb48cb1803670f3f61a')
+        .then(collections => collections.json())
+        .then((collections) => {
+          console.log(collections);
+          let entries = collections.entries;
+          let recentEntry = entries[entries.length - 1].watson;
+          this.setState({
+            personality: recentEntry
+          })
+        }).then(() => {
+          this.updateInfo();
+        });
+    }, 300000);
+
+  }
+
+  updateInfo () {
     let hoursPassed = this.getHours("May 10, 2019 13:00:00");
     let infoArray = []
     let psty = this.state.personality.personality;
@@ -442,38 +482,9 @@ class Page extends React.Component {
       infoArray.push(item.name + ': ' + percent + '. percentile');
     });
 
-    let printOut = [];
-    let counter = 0;
-
-    setInterval(() => {
-      if (infoArray[counter]) {
-        printOut.push(infoArray[counter]);
-        this.setState({
-          information: printOut
-        })
-        counter++;
-      } else {
-        printOut = [];
-        this.setState({
-          information: []
-        });
-        counter = 0;
-      }
-    }, 5000);
-
-    setInterval(() => {
-      fetch('https://krawc.space/api/collections/get/dataselfie_outputs?token=e2949d4cfc3fb48cb1803670f3f61a')
-        .then((res) => {
-          if (res.entries) {
-            let recentEntry = res.entries[0];
-            this.setState({
-              personality: recentEntry
-            })
-          }
-        });
-    }, 1200000);
-
-
+    this.setState({
+      infoArray: infoArray
+    })
   }
 
   render () {
